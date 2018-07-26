@@ -1,20 +1,63 @@
 (function(window,undefined){
 
     var 
+        //在dom中使用的延迟
+        readyList,
+        //对根jQuery（文档）的中心引用
+        rootjQuery,
+
+        //兼容ie<10
+        //用 typeof xmlNote.method 替代 xmlNote.method !== undefined
+        core_strundefined = typeof undefined,
+
+        location = window.location,
+        document = window.document,
+        docElem = document.documentElement,
+
+        _jQuery = window.jQuery,
+        _$ = window.$,
+
+        //保存数据类型例如："[object Function]" "[object Object]"
         class2type = {},
+        //删除的数据缓存id列表，因此我们可以重用它们
+        core_deletedIds = [],
+        //保存对某些核心方法的引用
+        core_version = "1.10.2",
         core_toString = class2type.toString,
         core_hasOwn = class2type.hasOwnProperty,
-
+        core_concat = core_deletedIds.concat,
+        core_push = core_deletedIds.push,
+        core_slice = core_deletedIds.slice,
+        core_indexOf = core_deletedIds.indexOf,
+        core_trim = core_version.trim,
 
         //jQuery可以看做是一个生成jq实例的工厂函数
-        jQuery = function(selector,context,rootjQuery){
+        jQuery = function(selector,context){
             //init作为构造函数
             return new jQuery.fn.init(selector,context,rootjQuery);
         };
 
     jQuery.fn = jQuery.prototype = {
+        jquery: core_version,
+        constructor: jQuery,
         init: function(selector,context,rootjQuery){
             //this 指向实例本身 init是实际的构造函数
+            var match, elem;
+            // handle: $("") $(null) $(undefined) $(false)
+            if( !selector ) {
+                return this;
+            }
+            //handle html strings
+            if( typeof selector === "string" ) {
+                if( selector.charAt(0) === "<" && selector.charAt(selector.length -1) === ">" && selector.length >= 3 ){
+                    //假设以<>开头和结尾的字符串是HTML并跳过正则表达式
+                    match = [ null, selector,null ];
+                } else {
+                    
+                }
+            }
+            //匹配html或确保没有为id指定上下文
+            
         },
     };
 
@@ -32,6 +75,7 @@
     // 如果第一个参数是 true，则是深拷贝
     // 从 object 原型继承的属性会被拷贝，值为 undefined 的属性不会被拷贝
     // 因为性能原因，JavaScript 自带类型的属性不会合并
+    // 使用 jQuery.extend({},{a:'a'})
     jQuery.extend = jQuery.fn.extend = function(){
         var options, name, src, copy, copyIsArray, clone,
             target = arguments[0] || {},
@@ -51,12 +95,47 @@
             target = {};
         }
 
+        //extend jQuery itself if only one arguments is passed
+        if( length = i ){
+            target = this;
+            --i;
+        }
+
+        //可以传入多个复制源
+        //i是从1或2开始的
+        for ( ; i<length; i++ ) {
+            // only deal with non-null/undefined values
+            // options 对应传入的一个或者多个合并对象
+            if( (options = arguments[i]) != null ){
+                for (name in options) {
+                    src = target[name]; 
+                    copy = options[name]; //获取options对应的val
+                    //防止死循环 已经复制完成了
+                    if( target === copy ){
+                        continue;
+                    }
+
+                    //这里是递归调用，最终都会到下面的 else if 分支
+                    //jQuery.isPlainObject 用于测试是否为纯粹的对象,纯粹的对象指的是 通过 "{}" 或者 "new Object" 创建的
+                    if( deep && copy && (jQuery.isPlainObject(copy) || (copyIsArray = jQuery.isArray(copy)) ) ) {
+                        if( copyIsArray ){
+                            copyIsArray = false;
+                            clone = src && jQuery.isArray(src)? src:[];
+                        }else{
+                            clone = src && jQuery.isPlainObject(src)? src :{};
+                        }
+                        //递归深拷贝
+                        target[name] = jQuery.extend(deep,clone,copy)
+                    }else if(copy !==undefined){
+                        target[name] = copy;
+                    }
+                }
+            }
+        }
     };
     // 添加静态方法
     jQuery.extend({
-        isFunction: function( obj ) {
-            return jQuery.type(obj) === 'function';
-        },
+        // 通过全局定义的core_toString将类型转化成字符串结果比较
         type: function( obj ) {
             if( obj==null ){
                 return String( obj );
@@ -64,7 +143,58 @@
             return typeof obj === "object" || typeof obj === "function" ? 
                 class2type[ core_toString.call(obj)] || "object" : 
                 typeof obj;
-        }
+        },
+        isFunction: function( obj ) {
+            return jQuery.type(obj) === 'function';
+        },
+        isArray: function( obj ) {
+            return jQuery.type(obj) === 'array';
+        },
+        //isNaN是否是NaN类型 isFinite是否是有限数字【数字 & 非无穷】
+        isNumeric: function(obj) {
+            return !isNaN(parseFloat(obj)) && isFinite( obj );
+        },
+        // 测试对象是否是纯粹的对象
+        // 通过 "{}" 或者 "new Object" 创建的
+        isPlainObject: function( obj ) {
+            var key;
+            if( !obj || jQuery.type(obj) !== "object" || obj.nodeType || jQuery.isWindow( obj ) ){
+                return false;
+            }
+
+            try {
+                if( obj.constructor && 
+                    ! core_hasOwn.call(obj,"constructor") &&
+                    ! core_hasOwn.call(obj.constructor.prototype,"isPrototypeOf") ) {
+                        return false
+                }
+            } catch(e) {
+                return false;
+            }
+            //兼容ie<9
+            if(jQuery.support.ownLast) {
+                for (key in obj){
+                    return core_hasOwn.call(obj,key)
+                }
+            }
+            // Own properties are enumerated firstly, so to speed up,
+		    // if last one is own, then all properties are own.
+            for ( key in obj ) {}
+
+            return key === undefined || core_hasOwn.call(obj,key)
+        },
+
+        isWindow: function( obj ) {
+            return obj != null && obj == obj.window;
+        },
+        error: function(msg){
+            throw new Error(msg);
+        },
+        noop: function() {},
+
+        
+
+        
 
     });
 
