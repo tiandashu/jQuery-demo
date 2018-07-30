@@ -81,7 +81,7 @@
                 document.detachEvent( "onreadystatechange", completed );
                 window.detachEvent( "onload", completed);
             }
-        }
+        };
 
     jQuery.fn = jQuery.prototype = {
         jquery: core_version,
