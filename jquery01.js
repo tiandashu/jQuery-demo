@@ -35,7 +35,53 @@
         jQuery = function(selector,context){
             //init作为构造函数
             return new jQuery.fn.init(selector,context,rootjQuery);
-        };
+        },
+
+        //match number
+        core_pnum = /[-+]?(?:\d*\.|)\d+(?:[eE][+-]?\d+)/.source,
+        //used for splitting on whitespace
+        core_rnotwhite = /\S+/g,
+        // Make sure we trim BOM and NBSP (here's looking at you, Safari 5.0 and IE)
+        rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,
+        // A simple way to check for HTML strings
+        // Prioritize #id over <tag> to avoid XSS via location.hash (#9521)
+        // Strict HTML recognition (#11290: must start with <)
+        rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]*))$/,
+        // Match a standalone tag
+        rsingleTag = /^<(\w+)\s*\/?>(?:<\/\1>|)$/,
+        
+        //JSON RegExp
+        rvalidchars = /^[\],:{}\s]*$/,
+        rvalidbraces = /(?:^|:|,)(?:\s*\[)+/g,
+        rvalidescape = /\\(?:["\\\/bfnrt]|u[\da-fA-F]{4})/g,
+        rvalidtokens = /"[^"\\\r\n]*"|true|false|null|-?(?:\d+\.|)\d+(?:[eE][+-]?\d+|)/g,
+
+        // Matches dashed string for camelizing
+        rmsPrefix = /^-ms-/,
+        rdashAlpha = /-([\da-z])/gi,
+        
+        // Used by jQuery.camelCase as callback to replace()
+        fcamelCase = function( all, letter ) {
+            return letter.toUpperCase();
+        },
+
+        //the ready event handler
+        completed = function(event){
+            if(document.addEventListener || event.type === "load" || document.readyState === "complete") {
+                detach();
+                jQuery.ready();
+            }
+        },
+        //Clean-up method for dom ready events
+        detach = function() {
+            if( document.addEventListener ) {
+                document.removeEventListener( "DOMContentLoaded", completed, false );
+                window.removeEventListener( "load", completed, false );
+            } else {
+                document.detachEvent( "onreadystatechange", completed );
+                window.detachEvent( "onload", completed);
+            }
+        }
 
     jQuery.fn = jQuery.prototype = {
         jquery: core_version,
@@ -53,10 +99,32 @@
                     //假设以<>开头和结尾的字符串是HTML并跳过正则表达式
                     match = [ null, selector,null ];
                 } else {
-                    
+                    //匹配的结果
+                    match = rquickExpr.exec( selector );
                 }
             }
             //匹配html或确保没有为id指定上下文
+            if( match && (match[1] || !context) ) {
+                // HANDLE: $(html) -> $(array)
+                if( match[1] ) {
+                    context = context instanceof jQuery ? context[0]:context;
+                    jQuery.merge( this, jQuery.parseHTML(
+                        match[1],
+                        context && context.nodeType ? context.ownerDocument || context : document,
+                        true
+                    ));
+
+                    //handle:$(html, props)
+                    if( rsingleTag.test( match[1] ) && jQuery.isPlainObject( context ) ) {
+                        for ( match in context ) {
+                            
+                        }
+                    }
+
+
+
+                }
+            }
             
         },
     };
