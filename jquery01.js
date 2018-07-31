@@ -117,7 +117,12 @@
                     //handle:$(html, props)
                     if( rsingleTag.test( match[1] ) && jQuery.isPlainObject( context ) ) {
                         for ( match in context ) {
-                            
+                            //如果可能的话，上下文的属性被称为方法
+                            if( jQuery.isFunction( this[match] ) ) {
+                                this[ match ](context[match]); 
+                            }else {
+                                this.attr( match,context[match]);
+                            }
                         }
                     }
 
