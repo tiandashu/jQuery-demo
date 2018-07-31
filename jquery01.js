@@ -100,20 +100,21 @@
                     match = [ null, selector,null ];
                 } else {
                     //匹配的结果
+                    // rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]*))$/ 简单的检测 HTML 字符串的表达式
                     match = rquickExpr.exec( selector );
                 }
-            }
-            //匹配html或确保没有为id指定上下文
-            if( match && (match[1] || !context) ) {
-                // HANDLE: $(html) -> $(array)
-                if( match[1] ) {
-                    context = context instanceof jQuery ? context[0]:context;
-                    jQuery.merge( this, jQuery.parseHTML(
-                        match[1],
-                        context && context.nodeType ? context.ownerDocument || context : document,
-                        true
-                    ));
+                 //匹配html或确保没有为id指定上下文
+                if( match && (match[1] || !context) ) {
+                    // HANDLE: $(html) -> $(array)
+                    if( match[1] ) {
+                        context = context instanceof jQuery ? context[0]:context;
+                        jQuery.merge( this, jQuery.parseHTML(
+                            match[1],
+                            context && context.nodeType ? context.ownerDocument || context : document,
+                            true
+                        ));
 
+<<<<<<< HEAD
                     //handle:$(html, props)
                     if( rsingleTag.test( match[1] ) && jQuery.isPlainObject( context ) ) {
                         for ( match in context ) {
@@ -123,15 +124,80 @@
                             }else {
                                 this.attr( match,context[match]);
                             }
+=======
+                        //handle:$(html, props)
+                        // $("<div>", {
+                        //     "class": "test",
+                        //     text: "Click me!",
+                        //     click: function(){
+                        //       $(this).toggleClass("test");
+                        //     }
+                        // })
+                        if( rsingleTag.test( match[1] ) && jQuery.isPlainObject( context ) ) {
+                            for ( match in context ) {
+                                if(jQuery.isFunction( this[match] ) ) {
+                                    this[ match ]( context[match] );
+                                } else {
+                                    this.attr( match, context[match] );
+                                }
+                            }
                         }
+                        return this;
+                        //handle: $(#id)
+                    } else {
+                        elem = document.getElementById(match[2]);
+                        // Check parentNode to catch when Blackberry 4.6 returns
+                        // nodes that are no longer in the document #6963
+                        if( elem && elem.parentNode ) {
+                            // Handle the case where IE and Opera return items
+                            // by name instead of ID
+                            if( elem.id !== match[2] ){
+                                return rootjQuery.find( selector );
+                            }
+                            this.length = 1;
+                            this[0] = elem;
+>>>>>>> 602f047776b8d062d734bc95a144189fa4472622
+                        }
+                        this.context = document;
+                        this.selector = selector;
+                        return this;
                     }
+                //handle: $(expr, $(...))
+                } else if( !context || context.jquery ) {
+                    return (context || rootjQuery).find( selector );
 
-
-
+                // HANDLE: $(expr, context)
+                // (which is just equivalent to: $(context).find(expr)
+                } else {
+                    return this.constructor( context ).find( selector );
                 }
+            // HANDLE: $(DOMElement)
+            } else if(selector.nodeType) {
+                this.context = this[0] = selector;
+                this.length = 1;
+                return this;
+            } else if(jQuery.isFunction( selector ) ){
+                return rootjQuery.ready( selector );
             }
+            if( selector.selector !== undefined ) {
+                this.selector = selector.selector;
+                this.context = selector.context;
+            }
+            return jQuery.makeArray( selector, this );
             
         },
+
+
+        selector: "",
+        //jQuery 对象的默认长度
+        //jQuery 对象里选取dom节点数目，有了这个属性就是个伪数组了
+        length: 0,
+        //jq对象转化成数组
+        toArray: function(){
+            return core_slice.call(this);
+        }
+
+
     };
 
     //init的原型指向jQuery原型形成共享，只是修改了原型的指向
@@ -208,6 +274,8 @@
     };
     // 添加静态方法
     jQuery.extend({
+
+        
         // 通过全局定义的core_toString将类型转化成字符串结果比较
         type: function( obj ) {
             if( obj==null ){
