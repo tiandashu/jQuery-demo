@@ -16,14 +16,17 @@
     }
     per.fn = per.prototype = {
         init:function(){
-            // this.age=18;
-            var age = 18;
+            this.age=18;
+            // var age = 18;
             console.log(this);
             console.log(this["age"]);
         },
         age:16
     }
     per.fn.init.prototype = per.fn;
-
+    per.fn.extends = function(){
+        alert(22)
+        console.log(this) 
+    }
     console.log(per());
 </script>
