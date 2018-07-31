@@ -107,24 +107,13 @@
                 if( match && (match[1] || !context) ) {
                     // HANDLE: $(html) -> $(array)
                     if( match[1] ) {
-                        context = context instanceof jQuery ? context[0]:context;
+                        context = context instanceof jQuery ? context[0] : context;
                         jQuery.merge( this, jQuery.parseHTML(
                             match[1],
                             context && context.nodeType ? context.ownerDocument || context : document,
                             true
                         ));
 
-<<<<<<< HEAD
-                    //handle:$(html, props)
-                    if( rsingleTag.test( match[1] ) && jQuery.isPlainObject( context ) ) {
-                        for ( match in context ) {
-                            //如果可能的话，上下文的属性被称为方法
-                            if( jQuery.isFunction( this[match] ) ) {
-                                this[ match ](context[match]); 
-                            }else {
-                                this.attr( match,context[match]);
-                            }
-=======
                         //handle:$(html, props)
                         // $("<div>", {
                         //     "class": "test",
@@ -145,7 +134,7 @@
                         return this;
                         //handle: $(#id)
                     } else {
-                        elem = document.getElementById(match[2]);
+                        elem = document.getElementById( match[2] );
                         // Check parentNode to catch when Blackberry 4.6 returns
                         // nodes that are no longer in the document #6963
                         if( elem && elem.parentNode ) {
@@ -156,7 +145,6 @@
                             }
                             this.length = 1;
                             this[0] = elem;
->>>>>>> 602f047776b8d062d734bc95a144189fa4472622
                         }
                         this.context = document;
                         this.selector = selector;
@@ -164,7 +152,7 @@
                     }
                 //handle: $(expr, $(...))
                 } else if( !context || context.jquery ) {
-                    return (context || rootjQuery).find( selector );
+                    return ( context || rootjQuery ).find( selector );
 
                 // HANDLE: $(expr, context)
                 // (which is just equivalent to: $(context).find(expr)
@@ -172,13 +160,14 @@
                     return this.constructor( context ).find( selector );
                 }
             // HANDLE: $(DOMElement)
-            } else if(selector.nodeType) {
+            } else if( selector.nodeType ) {
                 this.context = this[0] = selector;
                 this.length = 1;
                 return this;
             } else if(jQuery.isFunction( selector ) ){
                 return rootjQuery.ready( selector );
             }
+            //如果传入了jQuery对象，那么也是把参数jQuery的selector和context直接封装到新创建的jQuery对象上面!调用方式如$($(''))这种方式!
             if( selector.selector !== undefined ) {
                 this.selector = selector.selector;
                 this.context = selector.context;
@@ -195,9 +184,11 @@
         //jq对象转化成数组
         toArray: function(){
             return core_slice.call(this);
-        }
+        },
 
-
+        push: core_push,
+        sort: [].sort,
+        splice: [].splice
     };
 
     //init的原型指向jQuery原型形成共享，只是修改了原型的指向
@@ -265,7 +256,7 @@
                         }
                         //递归深拷贝
                         target[name] = jQuery.extend(deep,clone,copy)
-                    }else if(copy !==undefined){
+                    }else if(copy !== undefined ){
                         target[name] = copy;
                     }
                 }
@@ -275,7 +266,14 @@
     // 添加静态方法
     jQuery.extend({
 
-        
+        expando: "jQuery" + ( core_version + Math.random() ).replace( /\D/g, ""),
+        noConflict: function( deep ) {
+            if( window.$ === jQuery ) {
+                window.$ = _$;
+            }
+            if( deep && window.jQuery === jQuery
+            )
+        },
         // 通过全局定义的core_toString将类型转化成字符串结果比较
         type: function( obj ) {
             if( obj==null ){
