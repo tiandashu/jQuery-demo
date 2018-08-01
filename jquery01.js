@@ -271,9 +271,47 @@
             if( window.$ === jQuery ) {
                 window.$ = _$;
             }
-            if( deep && window.jQuery === jQuery
-            )
+            if( deep && window.jQuery === jQuery) {
+                window.jQuery = _jQuery;
+            }
+            return jQuery;
         },
+        // Is the DOM ready to be used? Set to true once it occurs.
+        isReady: false,
+        //一个计数器，用来跟踪需要等待的项目数量
+        readyWait: 1,
+
+        holdReady: function( hold ) {
+            if( hold ) {
+                jQuery.readyWait++;
+            } else {
+                jQuery.ready( true );
+            }
+        },
+        //handle when the dom is ready
+        ready: function( wait ){
+            //如果有未决的暂停或者我们已经准备好了
+            if( wait === true ? --jQuery.readyWait : jQuery,isReady ){
+                return;
+            }
+            //兼容ie
+            if( !document.body ){
+                return setTimeout( jQuery.ready );
+            }
+            // Remember that the DOM is ready
+            jQuery.isReady = true;
+            if( wait !== true && --jQuery.readyWait > 0){
+                return;
+            }
+            //如果有函数被绑定，执行
+            readyList.resolveWith( document, [jQuery] );
+            //trigger 绑定事件
+            if( jQuery.fn.trigger ){
+                jQuery( document ).trigger("ready").off("ready");
+            }
+
+        }, 
+
         // 通过全局定义的core_toString将类型转化成字符串结果比较
         type: function( obj ) {
             if( obj==null ){
@@ -321,6 +359,14 @@
             for ( key in obj ) {}
 
             return key === undefined || core_hasOwn.call(obj,key)
+        },
+        
+        isEmptyObject: function( obj ){
+            var name;
+            for( name in obj ){
+                return false;
+            }
+            return true;
         },
 
         isWindow: function( obj ) {
